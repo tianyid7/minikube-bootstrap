@@ -3,7 +3,7 @@ This repository contains a set of steps to bootstrap a minikube cluster with a s
 
 ## Prerequisites
 - [Minikube v1.35.0](https://minikube.sigs.k8s.io/docs/start/)
-- [Docker Desktop (Mem >= 16G CPU >= 8)](https://docs.docker.com/desktop/)
+- [Docker Desktop (Mem >= 30G CPU >= 12)](https://docs.docker.com/desktop/)
 - [Helm](https://helm.sh/)
 - [kubectx](https://github.com/ahmetb/kubectx)
 - [k9s](https://k9scli.io/)
@@ -12,7 +12,7 @@ This repository contains a set of steps to bootstrap a minikube cluster with a s
 1. Start minikube
 ```bash
 # Start minikube with docker driver. Ideally, memory should be >= 16G and CPU should be >= 8.
-minikube start --driver=docker --cpus=8 --memory=16g
+minikube start --driver=docker --cpus=12 --memory=30g
 ```
 The output should look like this:
 ```bash
@@ -21,7 +21,7 @@ The output should look like this:
 📌  Using Docker Desktop driver with root privileges
 👍  Starting "minikube" primary control-plane node in "minikube" cluster
 🚜  Pulling base image v0.0.46 ...
-🔥  Creating docker container (CPUs=8, Memory=13312MB) ...
+🔥  Creating docker container (CPUs=12, Memory=30720MB) ...
 💾  Downloading Kubernetes v1.32.0 preload ...
     > preloaded-images-k8s-v18-v1...:  314.92 MiB / 314.92 MiB  100.00% 11.11 M
     > gcr.io/k8s-minikube/kicbase...:  452.84 MiB / 452.84 MiB  100.00% 8.18 Mi
@@ -119,3 +119,70 @@ kubectl port-forward svc/postgres-postgresql 5432:5432
 # Step 6: Uninstall Postgres
 # helm uninstall postgres
 ```
+
+
+### Installing Data Lakehouse
+
+> Based on https://resethard.io/oss-data-lakehouse/ 
+
+Components include:
+- MinIO - S3 compliant object store for data storage.
+- Apache Parquet - columnar storage format.
+- Apache Iceberg - open table format and metadata.
+- Nessie - data catalog with some interesting Git-like features (a more battle-tested alternative would be Hive).
+- Apache Spark - data processing framework, version 3+.
+
+1. Installing MinIO (https://min.io/docs/minio/kubernetes/upstream/operations/install-deploy-manage/deploy-operator-helm.html)
+```bash
+# Step 1: Add the minio-operator Helm chart repository
+helm repo add minio-operator https://operator.min.io
+helm repo update
+
+# Step 2: Install minio-operator with namespace lakehouse
+helm install minio-operator minio-operator/operator \
+  --namespace lakehouse \
+  --create-namespace
+
+# Step 3: Install a minio tenant
+helm install minio-tenant minio-operator/tenant \
+--namespace lakehouse \
+--values lakehouse/minio-tenant-values.yaml
+
+# Step 4: Port forward minio tenant console
+kubectl port-forward svc/myminio-console 9443:9443 -n lakehouse
+
+# Step5: Access to minio console with https://localhost:9443
+# Username/Password: minio/minio123
+
+# Step 6: Create buckets in the console
+```
+
+2. Installing Nessie for Data Catalog
+```bash
+# Step 1: Add the nessie Helm chart repository
+helm repo add nessie-helm https://charts.projectnessie.org
+helm repo update
+
+# Step 2: Install Nessie with in-memory database
+helm install --namespace lakehouse nessie nessie-helm/nessie
+
+# Step 3: Port forward to Nessie
+kubectl --namespace lakehouse port-forward svc/nessie 19120:19120
+
+# Step 4: Connect to Nessie at http://localhost:19120
+```
+
+3. Installing Spark Operator (https://www.kubeflow.org/docs/components/spark-operator/getting-started/)
+```bash
+# Step 1: Add the spark-operator Helm chart repository
+helm repo add spark-operator https://kubeflow.github.io/spark-operator
+helm repo update
+
+# Step 2: Install Spark-operator
+helm install spark-operator spark-operator/spark-operator \
+    --namespace lakehouse \
+    --set "spark.jobNamespaces={lakehouse}" --set webhook.enable=true
+```
+
+> Try to submit a Spark job using `kubectl apply -f lakehouse/spark-py-pi.yaml`
+> Check the status by `kubectl get sparkapplication --namespace lakehouse`
