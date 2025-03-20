@@ -179,10 +179,39 @@ helm repo add spark-operator https://kubeflow.github.io/spark-operator
 helm repo update
 
 # Step 2: Install Spark-operator
+# There should be a service account `spark-operator-spark` created automatically
 helm install spark-operator spark-operator/spark-operator \
     --namespace lakehouse \
     --set "spark.jobNamespaces={lakehouse}" --set webhook.enable=true
+
+# Step 3: Test if can submit a Spark job
+kubectl apply -f lakehouse/spark-py-pi.yaml
+
+# Step 4: Check the SparkApplication status
+#kubectl get sparkapplication --namespace lakehouse
 ```
 
-> Try to submit a Spark job using `kubectl apply -f lakehouse/spark-py-pi.yaml`
-> Check the status by `kubectl get sparkapplication --namespace lakehouse`
+> Submit a Spark ETL job:
+>
+>Prerequisites:
+>- File "raw/people.txt" is saved in Minio bucket "raw".
+>
+> Steps:
+>1. Build Docker image and push to minikube registry (Powershell https://minikube.sigs.k8s.io/docs/handbook/pushing/#Windows)
+>```bash
+>& minikube -p minikube docker-env --shell powershell | Invoke-Expression
+>
+>cd ./lakehouse/spark-etl
+>
+>docker build -t spark-etl:v1.0.0 .
+>```
+>Check to see if the image is minikube registry
+> ```
+> minikube image ls --format table
+>```
+>
+> 2. Submit the Spark Application to K8s Spark operator
+>
+>```bash
+> kubectl apply -f spark-etl.yaml
+>```
