@@ -151,11 +151,14 @@ helm install minio-tenant minio-operator/tenant \
 # Step 4: Port forward minio tenant console
 kubectl port-forward svc/myminio-console 9443:9443 -n lakehouse
 
-# Step5: Access to minio console with https://localhost:9443
+# Step5: Access to minio console with http://localhost:9090
 # Username/Password: minio/minio123
 
 # Step 6: Create buckets in the console
 ```
+
+> We also need to create access key (`lakehouse`) and secret key (`lakehouse`) in the Minio tenant console as shown below:
+> ![setting-access-secret-key](assets/setting-minio-tenant-access-key.png)
 
 2. Installing Nessie for Data Catalog
 ```bash

@@ -19,7 +19,7 @@ spec:
     spark.sql.extensions: "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions,org.projectnessie.spark.extensions.NessieSparkSessionExtensions"
     spark.sql.catalog.standardized.io-impl: "org.apache.iceberg.aws.s3.S3FileIO"
     spark.sql.catalog.standardized.warehouse: "s3a://standardized/"
-    spark.sql.catalog.standardized.s3.endpoint: "https://minio.lakehouse.svc.cluster.local"
+    spark.sql.catalog.standardized.s3.endpoint: "http://minio.lakehouse.svc.cluster.local"
     spark.sql.catalog.standardized.catalog-impl: "org.apache.iceberg.nessie.NessieCatalog"
     spark.sql.catalog.standardized.uri: "http://nessie.lakehouse.svc.cluster.local:19120/api/v1/"
     spark.sql.catalog.standardized.authentication.type: "NONE"
@@ -28,7 +28,7 @@ spec:
   hadoopConf:
     fs.s3a.access.key: "lakehouse"
     fs.s3a.secret.key: "lakehouse"
-    fs.s3a.endpoint: "https://minio.lakehouse.svc.cluster.local"
+    fs.s3a.endpoint: "http://minio.lakehouse.svc.cluster.local"
     fs.s3a.connection.ssl.enabled: "false"
     fs.s3a.path.style.access: "true"
     fs.s3a.attempts.maximum: "1"
