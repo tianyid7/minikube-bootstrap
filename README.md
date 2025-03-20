@@ -218,3 +218,44 @@ kubectl apply -f lakehouse/spark-py-pi.yaml
 >```bash
 > kubectl apply -f spark-etl.yaml
 >```
+
+### Installing Airflow
+```bash
+# Step 1: Add Apache-airflow Helm chart repo
+helm repo add apache-airflow https://airflow.apache.org
+helm repo update
+
+# Step 2: Install Airflow
+helm upgrade --install airflow \
+    apache-airflow/airflow \
+    --namespace airflow --create-namespace
+
+# Step 3: Port forward Airflow UI
+ kubectl port-forward svc/airflow-webserver 8081:8080 --namespace airflow
+
+# Step 4: Access Airflow by http://localhost:8081 (username/password: admin/admin)
+```
+
+# TODO
+> To upload DAGs to DAG folder: ...
+
+### Installing JupyterHub
+```bash
+# Step 1: Add Jupyterhub Helm chart repo
+helm repo add jupyterhub https://hub.jupyter.org/helm-chart/
+helm repo update
+
+# Step 2: Install JupyterHub
+helm upgrade --cleanup-on-fail \
+  --install jupyterhub jupyterhub/jupyterhub \
+  --namespace jupyter \
+  --create-namespace \
+  --version=3.3.5
+
+# Step 3: Port forward JupyterHub UI
+ kubectl --namespace=jupyter port-forward service/proxy-public 8080:http
+
+# Step 4: Access to JupyterHub by http://localhost:8080
+```
+
+> Default username/password is `jovyan`/`jupyter`.
