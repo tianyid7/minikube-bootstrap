@@ -219,15 +219,21 @@ kubectl apply -f lakehouse/spark-py-pi.yaml
 > kubectl apply -f spark-etl.yaml
 >```
 
-### Installing Airflow
+### Installing Airflow (https://airflow.apache.org/docs/helm-chart/stable/index.html)
 ```bash
 # Step 1: Add Apache-airflow Helm chart repo
 helm repo add apache-airflow https://airflow.apache.org
 helm repo update
 
+# Step 2: Create a PVC for DAG folders
+# TODO: ...
+
 # Step 2: Install Airflow
 helm upgrade --install airflow \
     apache-airflow/airflow \
+    # --set dags.persistence.enabled=true \ 
+    # --set dags.persistence.existingClaim=airflow-dags-volume-claim \
+    # --set dags.gitSync.enabled=false \
     --namespace airflow --create-namespace
 
 # Step 3: Port forward Airflow UI
